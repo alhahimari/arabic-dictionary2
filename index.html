@@ -1,0 +1,702 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معجم الكلمات الغريبة</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f7f5f0;
+    color: #292c26;
+}
+header {
+    background: #263d35;
+    color: white;
+    text-align: center;
+    padding: 45px 15px;
+}
+
+header h1,
+.section-title,
+.word-card h3 {
+    font-family: 'Amiri', serif;
+}
+
+header p {
+    color: #d9e2d9;
+}
+
+nav {
+    background: white;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+nav button {
+    border: none;
+    background: #edf0e9;
+    color: #263d35;
+    padding: 12px 25px;
+    border-radius: 9px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+nav button.active,
+nav button:hover {
+    background: #263d35;
+    color: white;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+h2 {
+    color: #263d35;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.description {
+    color: #777e73;
+    line-height: 2;
+    margin-bottom: 20px;
+}
+
+.search-box {
+    width: 100%;
+    padding: 17px;
+    border: 1px solid #d9ded5;
+    border-radius: 12px;
+    font-size: 17px;
+    outline: none;
+    margin-bottom: 20px;
+    font-family: inherit;
+}
+
+.search-box:focus {
+    border-color: #547763;
+}
+
+.count {
+    color: #777e73;
+    margin-bottom: 18px;
+    font-size: 14px;
+}
+
+.words {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.word-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e8e5dc;
+    border-right: 4px solid #8caa91;
+}
+
+.word-card h3 {
+    color: #385a47;
+    font-size: 24px;
+    margin-bottom: 9px;
+}
+
+.word-card p {
+    color: #686e66;
+    line-height: 1.9;
+}
+
+.letters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.letter {
+    background: white;
+    border: 1px solid #dce1d8;
+    color: #263d35;
+    padding: 13px 5px;
+    border-radius: 9px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.letter:hover,
+.letter.selected {
+    background: #263d35;
+    color: white;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.empty {
+    text-align: center;
+    color: #858b80;
+    padding: 35px;
+    background: white;
+    border-radius: 12px;
+    grid-column: 1 / -1;
+}
+
+footer {
+    background: #263d35;
+    color: white;
+    text-align: center;
+    padding: 25px;
+    margin-top: 60px;
+}
+
+@media(max-width: 600px) {
+    header h1 {
+        font-size: 30px;
+    }
+
+    .words {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>معجم الكلمات الغريبة</h1>
+    <p>رحلة بين الكلمات العربية ومعانيها الجميلة</p>
+</header>
+
+<nav>
+    <button id="homeButton" class="active">الرئيسية</button>
+    <button id="lettersButton">صفحة الحروف</button>
+</nav>
+
+<main class="container">
+
+    <section id="home">
+
+        <h2>ابحث في المعجم</h2>
+
+        <p class="description">
+            اكتشف الكلمات العربية النادرة وتعرّف على معانيها.
+        </p>
+
+        <input
+            type="text"
+            id="search"
+            class="search-box"
+            placeholder="اكتب الكلمة التي تريد البحث عنها..."
+            autocomplete="off"
+        >
+
+        <p class="count" id="count"></p>
+
+        <div class="words" id="results"></div>
+
+    </section>
+
+    <section id="lettersPage" class="hidden">
+
+        <h2>تصفح الحروف العربية</h2>
+
+        <p class="description">
+            اختر حرفًا لاكتشاف الكلمات المسجلة تحته.
+        </p>
+
+        <div class="letters" id="letters"></div>
+
+        <h2 id="letterTitle">اختر حرفًا</h2>
+
+        <p class="count" id="letterCount"></p>
+
+        <div class="words" id="letterWords"></div>
+
+    </section>
+
+</main>
+
+<footer>
+    معجم الكلمات الغريبة
+    <br>
+    كنز من كنوز اللغة العربية
+</footer>
+
+<script>
+
+// ==================================
+// قاموس الكلمات
+// ==================================
+
+const dictionary = {
+
+"أ": [
+{word:"أُجاج",meaning:"شديد الملوحة."},
+{word:"أُوار",meaning:"شدة الحر."},
+{word:"أَثيل",meaning:"أصيل وعريق."},
+{word:"أَثْلَج",meaning:"شديد البرودة."},
+{word:"أَفَن",meaning:"ضعف العقل."}
+],
+
+"ب": [
+{word:"بَهْرَج",meaning:"زائف أو مزخرف."},
+{word:"بَيدَر",meaning:"مكان جمع الحبوب."},
+{word:"بَسْل",meaning:"شجاع."},
+{word:"بَأْواء",meaning:"الكِبر والتعالي."},
+{word:"بَهيم",meaning:"شديد الظلمة."}
+],
+
+"ت": [
+{word:"تِبْر",meaning:"الذهب أو الفضة قبل الصياغة."},
+{word:"تَؤدة",meaning:"التمهل."},
+{word:"تَغَلْغُل",meaning:"التداخل والنفاذ."},
+{word:"تَليد",meaning:"قديم وأصيل."},
+{word:"تَوجُّس",meaning:"الشعور بالقلق."}
+],
+
+"ث": [
+{word:"ثَغْر",meaning:"الفم أو موضع الحراسة."},
+{word:"ثَرى",meaning:"التراب الندي."},
+{word:"ثَكول",meaning:"المرأة التي فقدت ولدها."},
+{word:"ثَغَب",meaning:"ماء يجتمع في الصخر."},
+{word:"ثَفْل",meaning:"ما يترسب في أسفل السائل."}
+],
+
+"ج": [
+{word:"جَلْمَد",meaning:"الصخر الصلب."},
+{word:"جَاش",meaning:"القلب أو النفس."},
+{word:"جَفل",meaning:"جماعة من الناس."},
+{word:"جَذوة",meaning:"قطعة من النار."},
+{word:"جسور",meaning:"شديد الجرأة."}
+],
+
+"ح": [
+{word:"حصيف",meaning:"عاقل ورزين."},
+{word:"حندس",meaning:"ظلام شديد."},
+{word:"حزازة",meaning:"ضغينة في النفس."},
+{word:"حفيف",meaning:"صوت الأوراق."},
+{word:"حثيث",meaning:"سريع وجاد."}
+],
+
+"خ": [
+{word:"خِضَمَ",meaning:"البحر الواسع."},
+{word:"خَثْل",meaning:"خداع ومراوغة."},
+{word:"خَزَعْبَل",meaning:"كلام باطل."},
+{word:"خِرْق",meaning:"أحمق."},
+{word:"خميلة",meaning:"أرض كثيرة الأشجار."}
+],
+
+"د": [
+{word:"ديجور",meaning:"ظلام شديد."},
+{word:"دأب",meaning:"الاستمرار على العمل."},
+{word:"دجى",meaning:"ظلمة الليل."},
+{word:"دَثَار",meaning:"غطاء خارجي."},
+{word:"دُهْمَة",meaning:"شدة السواد."}
+],
+
+"ذ": [
+{word:"ذَعْذَعَة",meaning:"تحريك الشيء."},
+{word:"ذؤابة",meaning:"أعلى الشيء."},
+{word:"ذَفْرى",meaning:"منطقة خلف الأذن."},
+{word:"ذمار",meaning:"ما يجب حمايته."},
+{word:"ذَرْو",meaning:"أعلى الشيء."}
+],
+
+"ر": [
+{word:"رهج",meaning:"غبار متطاير."}
+],
+
+
+"ز": [
+{word:"زعزع",meaning:"حرك بشدة."},
+{word:"زؤان",meaning:"نبات ينمو بين الزرع."},
+{word:"زمهرير",meaning:"برد شديد."},
+{word:"زخار",meaning:"كثير الموج."},
+{word:"زغب",meaning:"شعر ناعم."}
+],
+
+"س": [
+{word:"سديم",meaning:"ضباب أو غيمة كونية."},
+{word:"سلافة",meaning:"خالص الشيء وأفضله."},
+{word:"سغب",meaning:"جوع شديد."},
+{word:"سجيح",meaning:"معتدل الجو."},
+{word:"سهاد",meaning:"أرق وقلة النوم."}
+],
+
+"ش": [
+{word:"شأو",meaning:"مسافة أو مدى."},
+{word:"شجن",meaning:"حزن ممزوج بالحنين."},
+{word:"شمردل",meaning:"طويل وقوي."},
+{word:"شذر",meaning:"قطع صغيرة متفرقة."}
+],
+
+"ص": [
+{word:"صنديد",meaning:"شجاع وقوي."},
+{word:"صهباء",meaning:"التي يميل لونها إلى الحمرة."},
+{word:"صرد",meaning:"شديد البرودة."},
+{word:"صخب",meaning:"ضجيج."},
+{word:"صريم",meaning:"الليل المظلم."}
+],
+
+"ض": [
+{word:"ضيزى",meaning:"جائرة وغير عادلة."},
+{word:"ضغن",meaning:"حقد."},
+{word:"ضرَام",meaning:"اشتعال النار."},
+{word:"ضنك",meaning:"ضيق وشدة."}
+],
+
+"ط": [
+{word:"طرس",meaning:"صحيفة مكتوبة."},
+{word:"طلل",meaning:"أثر الديار القديمة."},
+{word:"طمر",meaning:"ثوب بال."},
+{word:"طخاء",meaning:"ظلمة وغيم."}
+],
+
+"ظ": [
+{word:"ظعن",meaning:"سفر وارتحال."},
+{word:"ظمأ",meaning:"عطش."},
+{word:"ظفر",meaning:"فوز وانتصار."},
+{word:"ظليم",meaning:"ذكر النعام."}
+],
+
+"ع": [
+{word:"عسعس",meaning:"أقبل الليل أو أدبر."},
+{word:"عنكول",meaning:"عنقود النخل."},
+{word:"عبقر",meaning:"موضع اشتهر في الموروث بالغرائب."},
+{word:"عباب",meaning:"معظم الماء."}
+],
+
+"غ": [
+{word:"غسق",meaning:"أول ظلمة الليل."},
+{word:"غضنفر",meaning:"الأسد."},
+{word:"غضارة",meaning:"سعة ونعيم."},
+{word:"غبش",meaning:"بقية ظلمة الليل."}
+],
+
+"ف": [
+{word:"فدامة",meaning:"ثقل في الكلام."},
+{word:"فيحاء",meaning:"واسعة."},
+{word:"فتر",meaning:"ضعف وهدوء."}
+],
+
+"ق": [
+{word:"قسورة",meaning:"الأسد."},
+{word:"قتام",meaning:"غبار ودخان."},
+{word:"قضيم",meaning:"هشيم أو فتات."},
+{word:"قشيب",meaning:"جديد ونظيف."}
+],
+
+"ك": [
+{word:"كظم",meaning:"حبس الغيظ."},
+{word:"كنهبل",meaning:"شجر عظيم."},
+{word:"كلكلة",meaning:"الصدر."},
+{word:"كديد",meaning:"أرض صلبة."}
+],
+
+"ل": [
+{word:"لجب",meaning:"اختلاط الأصوات."},
+{word:"لجة",meaning:"معظم البحر."},
+{word:"لألاء",meaning:"بريق ولمعان."},
+{word:"لغوب",meaning:"تعب وإعياء."}
+],
+
+"م": [
+{word:"مهمهة",meaning:"صحراء واسعة."},
+{word:"مآق",meaning:"طرف العين."},
+{word:"مخض",meaning:"تحريك السائل."}
+],
+
+"ن": [
+{word:"نضناض",meaning:"كثير الحركة."},
+{word:"نجد",meaning:"أرض مرتفعة."},
+{word:"نزر",meaning:"قليل."},
+{word:"نضيد",meaning:"مرتب ومتراص."}
+],
+
+"هـ": [
+{word:"هزيم",meaning:"صوت الرعد."},
+{word:"هجير",meaning:"شدة حر الظهيرة."},
+{word:"هزل",meaning:"مزاح."},
+{word:"هتان",meaning:"مطر خفيف متتابع."}
+],
+
+"و": [
+{word:"وجد",meaning:"شدة الحب أو الحزن."},
+{word:"وغى",meaning:"الحرب وأصواتها."},
+{word:"وعثاء",meaning:"مشقة السفر."},
+{word:"وسن",meaning:"بداية النعاس."},
+{word:"وهج",meaning:"شدة الضوء والحرارة."}
+],
+
+"ي": [
+{word:"يفاع",meaning:"مكان مرتفع."},
+{word:"يباب",meaning:"خراب وخلو."},
+{word:"يراع",meaning:"القصب أو القلم."},
+{word:"يخضور",meaning:"الخضرة."}
+]
+
+
+};
+
+
+// ==================================
+// الحروف العربية
+// ==================================
+
+const alphabet = [
+"أ","ب","ت","ث","ج","ح","خ",
+"د","ذ","ر","ز","س","ش","ص",
+"ض","ط","ظ","ع","غ","ف","ق",
+"ك","ل","م","ن","هـ","و","ي"
+];
+
+
+// ==================================
+// عناصر الموقع
+// ==================================
+
+const home = document.getElementById("home");
+const lettersPage = document.getElementById("lettersPage");
+
+const homeButton = document.getElementById("homeButton");
+const lettersButton = document.getElementById("lettersButton");
+
+const search = document.getElementById("search");
+const results = document.getElementById("results");
+const count = document.getElementById("count");
+
+const lettersContainer = document.getElementById("letters");
+const letterTitle = document.getElementById("letterTitle");
+const letterCount = document.getElementById("letterCount");
+const letterWords = document.getElementById("letterWords");
+
+
+// ==================================
+// جميع الكلمات
+// ==================================
+
+function getAllWords() {
+    return Object.values(dictionary).flat();
+}
+
+
+// ==================================
+// إنشاء بطاقة الكلمة
+// ==================================
+
+function createCard(item) {
+
+    const card = document.createElement("article");
+    card.className = "word-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.word;
+
+    const meaning = document.createElement("p");
+    meaning.textContent = item.meaning;
+
+    card.appendChild(title);
+    card.appendChild(meaning);
+
+    return card;
+}
+
+
+// ==================================
+// عرض الكلمات
+// ==================================
+
+function displayWords(container, words) {
+
+    container.innerHTML = "";
+
+    if (words.length === 0) {
+
+        const message = document.createElement("p");
+
+        message.className = "empty";
+        message.textContent = "لم يتم العثور على الكلمة.";
+
+        container.appendChild(message);
+        return;
+    }
+
+    words.forEach(item => {
+        container.appendChild(createCard(item));
+    });
+}
+
+
+// ==================================
+// الصفحة الرئيسية
+// ==================================
+
+function showAllWords() {
+
+    const allWords = getAllWords();
+
+    displayWords(results, allWords);
+
+    count.textContent =
+        "عدد الكلمات المسجلة: " + allWords.length;
+}
+
+
+// ==================================
+// محرك البحث
+// ==================================
+
+function normalizeArabic(value) {
+
+    return value
+        .replace(/[\u064B-\u065F\u0670]/g, "")
+        .replace(/ـ/g, "")
+        .replace(/[أإآ]/g, "ا")
+        .replace(/ى/g, "ي")
+        .trim();
+}
+
+function searchWords() {
+
+    const value = normalizeArabic(search.value);
+
+    if (value === "") {
+        showAllWords();
+        return;
+    }
+
+    const filtered = getAllWords().filter(item => {
+
+        return normalizeArabic(item.word).includes(value);
+
+    });
+
+    displayWords(results, filtered);
+
+    count.textContent =
+        "عدد الكلمات المطابقة: " + filtered.length;
+}
+
+
+// ==================================
+// إنشاء أزرار الحروف
+// ==================================
+
+function createLetters() {
+
+    lettersContainer.innerHTML = "";
+
+    alphabet.forEach(letter => {
+
+        const button = document.createElement("button");
+
+        button.className = "letter";
+        button.textContent = letter;
+        button.type = "button";
+
+        button.addEventListener("click", function() {
+            selectLetter(letter, button);
+        });
+
+        lettersContainer.appendChild(button);
+    });
+}
+
+
+// ==================================
+// اختيار حرف
+// ==================================
+
+function selectLetter(letter, button) {
+
+    document.querySelectorAll(".letter").forEach(btn => {
+        btn.classList.remove("selected");
+    });
+
+    button.classList.add("selected");
+
+    const words = dictionary[letter] || [];
+
+    letterTitle.textContent = "حرف " + letter;
+
+    letterCount.textContent =
+        "عدد الكلمات المسجلة: " + words.length;
+
+    displayWords(letterWords, words);
+}
+
+
+// ==================================
+// الانتقال إلى الرئيسية
+// ==================================
+
+function showHome() {
+
+    home.classList.remove("hidden");
+    lettersPage.classList.add("hidden");
+
+    homeButton.classList.add("active");
+    lettersButton.classList.remove("active");
+}
+
+
+// ==================================
+// الانتقال إلى صفحة الحروف
+// ==================================
+
+function showLetters() {
+
+    home.classList.add("hidden");
+    lettersPage.classList.remove("hidden");
+
+    lettersButton.classList.add("active");
+    homeButton.classList.remove("active");
+}
+
+
+// ==================================
+// ربط الأزرار والبحث
+// ==================================
+
+homeButton.addEventListener("click", showHome);
+
+lettersButton.addEventListener("click", showLetters);
+
+search.addEventListener("input", searchWords);
+
+
+// ==================================
+// تشغيل الموقع
+// ==================================
+
+createLetters();
+showAllWords();
+
+</script>
+
+</body>
+</html>
